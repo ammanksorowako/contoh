@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kuis Interaktif: Bilangan Bulat Kelas 7</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            touch-action: manipulation; /* Improves touch responsiveness */
+        }
+        .quiz-container {
+            max-width: 700px;
+            width: 95%;
+            transition: all 0.3s ease;
+        }
+        .option-btn {
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .option-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .option-btn:active:not(:disabled) {
+            transform: translateY(0px);
+        }
+        .correct {
+            background-color: #22c55e !important; /* Tailwind green-500 */
+            color: white !important;
+            border-color: #16a34a !important; /* green-600 */
+        }
+        .incorrect {
+            background-color: #ef4444 !important; /* Tailwind red-500 */
+            color: white !important;
+            border-color: #dc2626 !important; /* red-600 */
+        }
+        .disabled-options .option-btn:not(.correct):not(.incorrect) {
+            background-color: #f3f4f6; /* gray-100 */
+            color: #9ca3af; /* gray-400 */
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen p-4">
+
+    <div id="quiz-container" class="quiz-container bg-white p-6 sm:p-8 rounded-2xl shadow-lg">
+        <div id="start-screen">
+            <h1 class="text-2xl sm:text-3xl font-bold text-gray-800 text-center mb-2">Selamat Datang di Kuis Bilangan Bulat</h1>
+            <p class="text-gray-600 text-center mb-6 sm:mb-8">Uji pemahamanmu tentang bilangan bulat untuk kelas 7. Siap?</p>
+            <button id="start-btn" class="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-4 rounded-lg text-lg transition duration-300 ease-in-out transform hover:scale-105">Mulai Kuis!</button>
+        </div>
+
+        <div id="quiz-screen" class="hidden">
+            <div class="flex justify-between items-center mb-4">
+                <p class="text-sm font-medium text-gray-500">Pertanyaan <span id="question-number"></span> dari <span id="total-questions"></span></p>
+                <p class="text-sm font-semibold bg-blue-100 text-blue-800 px-3 py-1 rounded-full">Skor: <span id="score">0</span></p>
+            </div>
+            
+            <div id="progress-bar-container" class="w-full bg-gray-200 rounded-full h-2.5 mb-6">
+                <div id="progress-bar" class="bg-blue-500 h-2.5 rounded-full transition-all duration-300 ease-out"></div>
+            </div>
+
+            <h2 id="question-text" class="text-xl sm:text-2xl font-semibold text-gray-800 mb-6 min-h-[6rem]"></h2>
+
+            <div id="options-container" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- Opsi Jawaban akan dimasukkan di sini oleh JS -->
+            </div>
+
+            <div id="feedback-container" class="mt-6 min-h-[2rem]">
+                 <p id="feedback-text" class="text-center font-medium"></p>
+            </div>
+
+            <button id="next-btn" class="w-full mt-4 bg-gray-800 hover:bg-gray-900 text-white font-bold py-3 px-4 rounded-lg text-lg transition duration-300 ease-in-out hidden">Selanjutnya</button>
+        </div>
+
+        <div id="result-screen" class="hidden text-center">
+             <h2 class="text-2xl sm:text-3xl font-bold text-gray-800 mb-2">Kuis Selesai!</h2>
+             <p class="text-gray-600 mb-6">Skor akhir kamu adalah:</p>
+             <p id="final-score" class="text-6xl font-bold text-blue-500 mb-8"></p>
+             <p id="result-message" class="text-lg font-medium text-gray-700 mb-8"></p>
+             <button id="restart-btn" class="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-4 rounded-lg text-lg transition duration-300 ease-in-out transform hover:scale-105">Coba Lagi</button>
+        </div>
+    </div>
+
+    <script>
+        const quizData = [
+            {
+                question: "Urutan bilangan -3, 5, -7, 2 dari yang terkecil adalah...",
+                options: ["-7, -3, 2, 5", "-3, -7, 2, 5", "5, 2, -3, -7", "-7, 2, -3, 5"],
+                answer: "-7, -3, 2, 5"
+            },
+            {
+                question: "Hasil dari (-12) + 7 adalah...",
+                options: ["5", "-19", "-5", "19"],
+                answer: "-5"
+            },
+            {
+                question: "Hasil dari 8 - (-4) adalah...",
+                options: ["4", "12", "-4", "-12"],
+                answer: "12"
+            },
+            {
+                question: "Hasil dari (-5) × (-9) adalah...",
+                options: ["45", "-45", "14", "-14"],
+                answer: "45"
+            },
+            {
+                question: "Hasil dari 36 : (-4) adalah...",
+                options: ["9", "-8", "8", "-9"],
+                answer: "-9"
+            },
+            {
+                question: "Hasil dari 10 + 2 × (-7) adalah...",
+                options: ["-84", "24", "-4", "84"],
+                answer: "-4"
+            },
+            {
+                question: "Suhu di kota A pada pagi hari adalah -5°C. Pada siang hari, suhunya naik 12°C. Berapa suhu di kota A pada siang hari?",
+                options: ["7°C", "-17°C", "17°C", "-7°C"],
+                answer: "7°C"
+            },
+            {
+                question: "Bentuk 5 × (10 - 2) sama dengan...",
+                options: ["(5 × 10) - 2", "5 × 10 × 2", "(5 × 10) - (5 × 2)", "(5 + 10) - (5 + 2)"],
+                answer: "(5 × 10) - (5 × 2)"
+            },
+            {
+                question: "Manakah pernyataan di bawah ini yang benar?",
+                options: ["-10 > -2", "-4 > -8", "0 < -5", "3 < -3"],
+                answer: "-4 > -8"
+            },
+            {
+                question: "Dalam sebuah kompetisi, skor untuk jawaban benar adalah 4, jawaban salah adalah -2, dan tidak dijawab adalah 0. Jika Budi menjawab 15 soal dengan benar dan 5 soal salah dari total 25 soal, berapa total skor Budi?",
+                options: ["60", "40", "70", "50"],
+                answer: "50"
+            }
+        ];
+
+        const startScreen = document.getElementById('start-screen');
+        const quizScreen = document.getElementById('quiz-screen');
+        const resultScreen = document.getElementById('result-screen');
+
+        const startBtn = document.getElementById('start-btn');
+        const nextBtn = document.getElementById('next-btn');
+        const restartBtn = document.getElementById('restart-btn');
+
+        const questionNumberEl = document.getElementById('question-number');
+        const totalQuestionsEl = document.getElementById('total-questions');
+        const scoreEl = document.getElementById('score');
+        const questionTextEl = document.getElementById('question-text');
+        const optionsContainerEl = document.getElementById('options-container');
+        const feedbackTextEl = document.getElementById('feedback-text');
+        const progressBarEl = document.getElementById('progress-bar');
+        
+        const finalScoreEl = document.getElementById('final-score');
+        const resultMessageEl = document.getElementById('result-message');
+
+
+        let currentQuestionIndex = 0;
+        let score = 0;
+
+        function startQuiz() {
+            startScreen.classList.add('hidden');
+            resultScreen.classList.add('hidden');
+            quizScreen.classList.remove('hidden');
+            currentQuestionIndex = 0;
+            score = 0;
+            scoreEl.textContent = score;
+            showQuestion();
+        }
+
+        function showQuestion() {
+            resetState();
+            const currentQuestion = quizData[currentQuestionIndex];
+            questionNumberEl.textContent = currentQuestionIndex + 1;
+            totalQuestionsEl.textContent = quizData.length;
+            questionTextEl.innerHTML = currentQuestion.question; // Use innerHTML to render degree symbols etc.
+            
+            updateProgressBar();
+
+            currentQuestion.options.forEach(option => {
+                const button = document.createElement('button');
+                button.textContent = option;
+                button.classList.add('option-btn', 'w-full', 'p-4', 'border', 'border-gray-300', 'rounded-lg', 'text-left', 'hover:bg-blue-100', 'hover:border-blue-400', 'focus:outline-none', 'focus:ring-2', 'focus:ring-blue-400');
+                button.addEventListener('click', selectAnswer);
+                optionsContainerEl.appendChild(button);
+            });
+        }
+        
+        function updateProgressBar() {
+            const progressPercentage = ((currentQuestionIndex) / quizData.length) * 100;
+            progressBarEl.style.width = `${progressPercentage}%`;
+        }
+
+
+        function resetState() {
+            nextBtn.classList.add('hidden');
+            feedbackTextEl.textContent = '';
+            feedbackTextEl.classList.remove('text-green-600', 'text-red-600');
+            optionsContainerEl.innerHTML = '';
+            optionsContainerEl.classList.remove('disabled-options');
+        }
+
+        function selectAnswer(e) {
+            const selectedBtn = e.target;
+            const correctAnswer = quizData[currentQuestionIndex].answer;
+
+            optionsContainerEl.classList.add('disabled-options');
+
+            Array.from(optionsContainerEl.children).forEach(button => {
+                button.disabled = true; // Disable all buttons
+                if (button.textContent === correctAnswer) {
+                    button.classList.add('correct');
+                }
+            });
+
+            if (selectedBtn.textContent === correctAnswer) {
+                score++;
+                scoreEl.textContent = score;
+                selectedBtn.classList.add('correct');
+                feedbackTextEl.textContent = 'Jawaban Benar!';
+                feedbackTextEl.classList.add('text-green-600');
+            } else {
+                selectedBtn.classList.add('incorrect');
+                feedbackTextEl.textContent = 'Jawaban Salah!';
+                feedbackTextEl.classList.add('text-red-600');
+            }
+
+            if (quizData.length > currentQuestionIndex + 1) {
+                nextBtn.classList.remove('hidden');
+            } else {
+                // This is the last question, show results after a delay
+                progressBarEl.style.width = '100%';
+                setTimeout(showResults, 1500);
+            }
+        }
+
+        function showResults() {
+            quizScreen.classList.add('hidden');
+            resultScreen.classList.remove('hidden');
+            finalScoreEl.textContent = `${score}/${quizData.length}`;
+
+            const percentage = (score / quizData.length) * 100;
+            let message = '';
+            if (percentage === 100) {
+                message = 'Sempurna! Kamu menguasai materi ini dengan sangat baik!';
+            } else if (percentage >= 80) {
+                message = 'Luar biasa! Pemahamanmu sudah sangat baik.';
+            } else if (percentage >= 60) {
+                message = 'Bagus! Teruslah berlatih agar lebih mahir.';
+            } else {
+                message = 'Jangan menyerah! Coba pelajari lagi materinya dan ulangi kuisnya.';
+            }
+            resultMessageEl.textContent = message;
+        }
+
+        function handleNextButton() {
+            currentQuestionIndex++;
+            showQuestion();
+        }
+
+        startBtn.addEventListener('click', startQuiz);
+        nextBtn.addEventListener('click', handleNextButton);
+        restartBtn.addEventListener('click', startQuiz);
+    </script>
+</body>
+</html>
